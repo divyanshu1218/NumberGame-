@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Match</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --success: #10B981;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Card Container */
+        .game-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #E5E7EB;
+            padding-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-value.urgent {
+            color: var(--danger);
+            animation: pulse 1s infinite;
+        }
+
+        /* Game Board */
+        #board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 6px;
+            background: #F9FAFB;
+            padding: 10px;
+            border-radius: 8px;
+            justify-content: center;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .cell:hover:not(.cleared) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .cell.selected {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .cell.highlight {
+            background-color: var(--accent);
+            color: white;
+            animation: bounce 0.5s;
+        }
+
+        .cell.shake {
+            animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+            border-color: var(--danger);
+            background-color: #FEF2F2;
+        }
+
+        .cell.cleared {
+            opacity: 0;
+            pointer-events: none;
+            /* transform: scale(0); */
+            /* transition: opacity 0.3s, transform 0.3s; */
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #addRowBtn {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        #addRowBtn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #rescueBtn {
+            background-color: white;
+            border: 2px solid #E5E7EB;
+            color: var(--text-light);
+        }
+
+        #rescueBtn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background-color: #FFFBEB;
+        }
+
+        /* Status Message */
+        .message {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            min-height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .message.show {
+            opacity: 1;
+        }
+
+        .message.info {
+            background: #E0E7FF;
+            color: var(--primary);
+        }
+
+        .message.success {
+            background: #D1FAE5;
+            color: var(--success);
+        }
+
+        .message.error {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+
+        .message.warning {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        /* Animations */
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="game-container">
+        <header>
+            <h1>Number Match</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Level</span>
+                    <span class="stat-value" id="levelDisplay">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Time</span>
+                    <span class="stat-value" id="timeDisplay">0:00</span>
+                </div>
+            </div>
+        </header>
+
+        <div id="board">
+            <!-- Cells generated by JS -->
+        </div>
+
+        <div id="messageDisplay" class="message"></div>
+
+        <div class="controls">
+            <button id="addRowBtn">+ Add Numbers</button>
+            <button id="rescueBtn">Hint / Rescue</button>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script type="module" src="./dist/ui/UIController.js"></script>
+</body>
+
+</html>
